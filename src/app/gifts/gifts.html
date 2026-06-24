@@ -1,0 +1,104 @@
+<div class="gifts-container container animate-fade-in">
+  <header class="gifts-header text-center">
+    <span class="badge badge-green">GreenSpace Gifting Boutique</span>
+    <h1>Gift a Plant, Share a Life</h1>
+    <p>Choose from our handpicked easy-care plants, pair them with premium colorful pots, and add a personalized card.</p>
+  </header>
+
+  <div class="gifts-layout">
+    <!-- Interactive Gift Combo Builder -->
+    <section class="builder-section card glass-card">
+      <h2>🎁 Design Your Gift Box</h2>
+      <p class="section-desc">Create a custom botanical gift package in three simple steps.</p>
+
+      <div class="builder-steps">
+        <!-- Step 1: Select Gift Plant -->
+        <div class="builder-step">
+          <label class="form-label">Step 1: Choose a plant</label>
+          <div class="plant-gift-selector">
+            <div *ngFor="let p of giftableProducts()" 
+                 class="gift-plant-card"
+                 [class.selected]="selectedPlant()?.id === p.id"
+                 (click)="selectedPlant.set(p)">
+              <img [src]="p.imageUrl || 'assets/images/placeholder.jpg'" [alt]="p.name" class="p-img">
+              <div class="p-name">{{ p.name }}</div>
+              <div class="p-price">₹{{ p.price }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Custom Pot Color -->
+        <div class="builder-step" *ngIf="selectedPlant()">
+          <label class="form-label">Step 2: Select designer pot color</label>
+          <div class="pot-colors-grid">
+            <button *ngFor="let pColor of potColors" 
+                    class="pot-option"
+                    [class.selected]="selectedColor() === pColor.name"
+                    (click)="selectedColor.set(pColor.name)"
+                    [style.background-color]="pColor.hex"
+                    [title]="pColor.name">
+            </button>
+          </div>
+          <div class="selected-color-label">Chosen Pot: <strong>{{ selectedColor() }}</strong></div>
+        </div>
+
+        <!-- Step 3: Select Message Card -->
+        <div class="builder-step" *ngIf="selectedPlant()">
+          <label class="form-label">Step 3: Pick a greeting card theme & write message</label>
+          <div class="card-themes-grid">
+            <button *ngFor="let theme of cardThemes" 
+                    class="theme-btn"
+                    [class.selected]="selectedTheme() === theme"
+                    (click)="selectedTheme.set(theme)">
+              {{ theme }}
+            </button>
+          </div>
+
+          <div class="message-input-area form-group">
+            <textarea [(ngModel)]="customMessage" 
+                      placeholder="Type your greeting message here... (e.g., 'Dear Mom, wishing you a green and peaceful year ahead!')" 
+                      class="form-input" 
+                      rows="3">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Builder Summary & Add to Cart -->
+      <div class="builder-footer" *ngIf="selectedPlant()">
+        <div class="summary-details">
+          <h3>Gift Combo Summary:</h3>
+          <p>🌱 Plant: <strong>{{ selectedPlant()?.name }}</strong></p>
+          <p>🏺 Planter: <strong>{{ selectedColor() }} Ceramic Pot</strong></p>
+          <p>💌 Greeting: <strong>{{ selectedTheme() }} Card</strong></p>
+        </div>
+        
+        <div class="price-action-row">
+          <div class="total-gift-price">
+            <span class="label">Combo Price:</span>
+            <span class="price">₹{{ comboPrice() }}</span>
+            <span class="extra-notice">(Includes wrap & card)</span>
+          </div>
+          <button (click)="addGiftComboToCart()" class="btn btn-primary">
+            Add Gift Combo to Cart
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sidebar showcase of popular pre-packaged combos -->
+    <aside class="popular-gifts-aside">
+      <h2>Ready Combos</h2>
+      <div class="combos-list">
+        <div class="combo-card card" *ngFor="let combo of prepackagedCombos">
+          <div class="combo-title">✨ {{ combo.name }}</div>
+          <p class="combo-desc">{{ combo.desc }}</p>
+          <div class="combo-footer">
+            <span class="price">₹{{ combo.price }}</span>
+            <button (click)="buyPrepackagedCombo(combo)" class="btn btn-secondary btn-sm">Add Combo</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

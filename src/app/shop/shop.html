@@ -1,0 +1,277 @@
+<div class="shop-container container animate-fade-in">
+  
+  <!-- Filters Sidebar -->
+  <aside class="sidebar">
+    <div class="filter-group">
+      <h3>Search Catalog</h3>
+      <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search plants, tools..." class="form-input search-input">
+    </div>
+
+    <div class="filter-group">
+      <h3>Categories</h3>
+      <div class="checkbox-list">
+        <label class="filter-label">
+          <input type="radio" name="category" [checked]="selectedCategoryId() === null" (change)="selectCategory(null)">
+          All Items
+        </label>
+        <label *ngFor="let cat of categories()" class="filter-label">
+          <input type="radio" name="category" [checked]="selectedCategoryId() === cat.id" (change)="selectCategory(cat.id)">
+          {{ cat.name }}
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <h3>Light Requirements</h3>
+      <select [(ngModel)]="selectedLight" (change)="applyFilters()" class="form-input">
+        <option value="">Any Light</option>
+        <option value="Low">Low Light (Indoor)</option>
+        <option value="Medium">Medium Light</option>
+        <option value="Bright Indirect">Bright Indirect</option>
+        <option value="Direct Sun">Direct Sun</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <h3>Plant Care Level</h3>
+      <select [(ngModel)]="selectedDifficulty" (change)="applyFilters()" class="form-input">
+        <option value="">Any Level</option>
+        <option value="Beginner">Beginner Friendly</option>
+        <option value="Intermediate">Intermediate Care</option>
+        <option value="Expert">Expert Level</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <h3>Pet Safety</h3>
+      <label class="switch-container">
+        <input type="checkbox" [(ngModel)]="petFriendlyOnly" (change)="applyFilters()">
+        <span class="switch-label">Safe for Pets (Non-toxic)</span>
+      </label>
+    </div>
+  </aside>
+
+  <!-- Main Products Grid -->
+  <main class="products-area">
+    <div class="area-header">
+      <h2>Our Botanicals</h2>
+      <span class="product-count">{{ products().length }} items found</span>
+    </div>
+
+    <div class="grid-3" *ngIf="products().length > 0; else noProducts">
+      <div *ngFor="let prod of products()" class="product-item card">
+        <div class="product-img-wrapper" (click)="openProductModal(prod)">
+          <img [src]="prod.imageUrl || 'assets/images/placeholder.jpg'" [alt]="prod.name" class="product-img">
+        </div>
+        <div class="product-info">
+          <span class="badge badge-green">{{ prod.category?.name }}</span>
+          <h3 (click)="openProductModal(prod)" class="clickable-title">{{ prod.name }}</h3>
+          <p class="product-desc">{{ prod.shortDescription }}</p>
+          
+          <div class="product-footer">
+            <span class="price">₹{{ prod.price }}</span>
+            <button (click)="addToCart(prod)" class="btn btn-primary btn-sm">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noProducts>
+      <div class="no-results card text-center">
+        <div class="no-results-icon">🍂</div>
+        <h3>No Products Found</h3>
+        <p>Try adjusting your search filters or clear filters to view all products.</p>
+        <button (click)="clearFilters()" class="btn btn-secondary">Reset Filters</button>
+      </div>
+    </ng-template>
+  </main>
+
+  <!-- Cart Side Drawer Toggle Button -->
+  <button class="cart-trigger btn btn-primary" (click)="toggleCartDrawer(true)">
+    🛒 Cart ({{ cartCount() }}) - ₹{{ cartSubtotal() }}
+  </button>
+
+  <!-- Cart Drawer Overlay -->
+  <div class="cart-drawer-overlay" [class.open]="cartOpen()" (click)="toggleCartDrawer(false)">
+    <div class="cart-drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <h2>Your Shopping Cart</h2>
+        <button class="close-drawer-btn" (click)="toggleCartDrawer(false)">✕</button>
+      </div>
+
+      <div class="drawer-content">
+        <div *ngIf="cart().length === 0" class="empty-cart text-center">
+          <div class="empty-cart-icon">🛒</div>
+          <p>Your cart is empty. Fill it with plants!</p>
+          <button class="btn btn-primary" (click)="toggleCartDrawer(false)">Start Shopping</button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div *ngFor="let item of cart()" class="cart-item-row">
+          <img [src]="item.product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="item.product.name" class="cart-item-img">
+          <div class="cart-item-details">
+            <h4>{{ item.product.name }}</h4>
+            <div *ngIf="item.customPotColor" class="custom-pot-badge">
+              Pot Color: {{ item.customPotColor }}
+            </div>
+            <div class="price">₹{{ item.product.price }}</div>
+            <div class="quantity-controls">
+              <button (click)="decreaseQty(item)" class="qty-btn">-</button>
+              <span class="qty-val">{{ item.quantity }}</span>
+              <button (click)="increaseQty(item)" class="qty-btn">+</button>
+            </div>
+          </div>
+          <button class="remove-item-btn" (click)="removeFromCart(item)">✕</button>
+        </div>
+      </div>
+
+      <!-- Checkout Section in Cart -->
+      <div class="drawer-footer" *ngIf="cart().length > 0">
+        <div class="subtotal-row">
+          <span>Subtotal:</span>
+          <span class="price">₹{{ cartSubtotal() }}</span>
+        </div>
+        
+        <div *ngIf="!checkoutMode()" class="action-row">
+          <button (click)="enterCheckout()" class="btn btn-primary w-100">Proceed to Checkout</button>
+        </div>
+
+        <!-- Checkout Form -->
+        <div *ngIf="checkoutMode()" class="checkout-form animate-fade-in">
+          <h3>Shipping Details</h3>
+          <div class="form-group">
+            <input type="text" [(ngModel)]="shippingName" placeholder="Full Name" class="form-input">
+          </div>
+          <div class="form-group">
+            <input type="email" [(ngModel)]="shippingEmail" placeholder="Email Address" class="form-input">
+          </div>
+          <div class="form-group">
+            <input type="text" [(ngModel)]="shippingAddress" placeholder="Delivery Address" class="form-input">
+          </div>
+          <div class="form-row grid-2">
+            <input type="text" [(ngModel)]="shippingCity" placeholder="City" class="form-input">
+            <input type="text" [(ngModel)]="shippingPostalCode" placeholder="Pincode" class="form-input">
+          </div>
+
+          <!-- Gift Checkbox -->
+          <div class="form-group gift-toggle">
+            <label>
+              <input type="checkbox" [(ngModel)]="isGiftOrder">
+              🎁 Mark this order as a Gift (+₹50 for Premium Wrap)
+            </label>
+          </div>
+
+          <div *ngIf="isGiftOrder" class="gift-fields animate-fade-in">
+            <div class="form-group">
+              <input type="text" [(ngModel)]="recipientName" placeholder="Recipient's Name" class="form-input">
+            </div>
+            <div class="form-group">
+              <input type="text" [(ngModel)]="recipientPhone" placeholder="Recipient's Phone Number" class="form-input">
+            </div>
+            <div class="form-group">
+              <textarea [(ngModel)]="giftMessage" placeholder="Gift Greeting Message (write a warm note...)" class="form-input" rows="2"></textarea>
+            </div>
+          </div>
+
+          <div class="totals-summary">
+            <div class="summary-line">
+              <span>Shipping:</span>
+              <span>{{ cartSubtotal() > 1000 ? 'FREE' : '₹99' }}</span>
+            </div>
+            <div class="summary-line" *ngIf="isGiftOrder">
+              <span>Gift Wrapping:</span>
+              <span>₹50</span>
+            </div>
+            <div class="summary-line total">
+              <span>Grand Total:</span>
+              <span class="price">₹{{ grandTotal() }}</span>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button (click)="checkoutMode.set(false)" class="btn btn-secondary">Back</button>
+            <button (click)="payWithRazorpay()" class="btn btn-primary" [disabled]="processingPayment()">
+              {{ processingPayment() ? 'Initializing Razorpay...' : 'Pay with Razorpay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal-overlay" *ngIf="activeProductModal()" (click)="closeProductModal()">
+    <div class="product-modal card" (click)="$event.stopPropagation()">
+      <button class="close-modal-btn" (click)="closeProductModal()">✕</button>
+      
+      <div class="grid-2 modal-grid">
+        <div class="modal-image-wrapper">
+          <img [src]="activeProductModal()?.imageUrl || 'assets/images/placeholder.jpg'" [alt]="activeProductModal()?.name">
+        </div>
+        
+        <div class="modal-info">
+          <span class="badge badge-green">{{ activeProductModal()?.category?.name }}</span>
+          <h2>{{ activeProductModal()?.name }}</h2>
+          <div class="price-row">
+            <span class="price-val">₹{{ activeProductModal()?.price }}</span>
+            <span *ngIf="activeProductModal()?.compareAtPrice" class="compare-price">₹{{ activeProductModal()?.compareAtPrice }}</span>
+          </div>
+          <p class="long-desc">{{ activeProductModal()?.detailedDescription }}</p>
+
+          <!-- Plant Care Attributes -->
+          <div class="care-attributes-grid" *ngIf="activeProductModal()?.plantDetail">
+            <div class="attr-box">
+              <span class="attr-icon">☀️</span>
+              <div class="attr-content">
+                <label>Light</label>
+                <span>{{ activeProductModal()?.plantDetail?.lightRequirements }}</span>
+              </div>
+            </div>
+            <div class="attr-box">
+              <span class="attr-icon">💧</span>
+              <div class="attr-content">
+                <label>Water</label>
+                <span>{{ activeProductModal()?.plantDetail?.wateringFrequency }}</span>
+              </div>
+            </div>
+            <div class="attr-box">
+              <span class="attr-icon">🐾</span>
+              <div class="attr-content">
+                <label>Pet Safe</label>
+                <span>{{ activeProductModal()?.plantDetail?.toxicityToPets ? 'No (Toxic)' : 'Yes (Safe)' }}</span>
+              </div>
+            </div>
+            <div class="attr-box">
+              <span class="attr-icon">🛠️</span>
+              <div class="attr-content">
+                <label>Care Level</label>
+                <span>{{ activeProductModal()?.plantDetail?.difficultyLevel }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gift custom pot selection -->
+          <div class="custom-pot-selection" *ngIf="activeProductModal()?.isGiftable">
+            <label class="form-label">Customize Designer Pot Color</label>
+            <div class="pot-colors">
+              <span *ngFor="let color of potColors" 
+                    class="pot-dot" 
+                    [style.background-color]="color"
+                    [class.selected]="selectedPotColor() === color"
+                    (click)="selectedPotColor.set(color)"
+                    [title]="color">
+              </span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button (click)="addProductFromModal()" class="btn btn-primary w-100">Add to Bag</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

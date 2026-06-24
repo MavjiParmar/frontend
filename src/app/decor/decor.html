@@ -1,0 +1,185 @@
+<div class="decor-container container animate-fade-in">
+  
+  <header class="decor-header text-center">
+    <span class="badge badge-green">Greenspace Landscaping & Styling</span>
+    <h1>Custom Space Plantation Planner</h1>
+    <p>Design your dream room, office, balcony, or garden with proper plant species selected by experts.</p>
+  </header>
+
+  <!-- Multi-Step Questionnaire Wizard -->
+  <section class="wizard-section card glass-card">
+    <!-- Wizard Navigation Steps -->
+    <div class="wizard-steps">
+      <div class="step-num" [class.active]="step() === 1">1. Select Space</div>
+      <div class="step-num" [class.active]="step() === 2">2. Conditions</div>
+      <div class="step-num" [class.active]="step() === 3">3. Review Packages</div>
+    </div>
+
+    <!-- Step 1: Space Choice -->
+    <div *ngIf="step() === 1" class="step-pane animate-fade-in">
+      <h2>Which space are we greening?</h2>
+      <p class="pane-subtitle">Choose the target zone to personalize layout suggestions.</p>
+      
+      <div class="space-selector-grid">
+        <div class="space-box" [class.selected]="selectedSpaceType() === 'Office'" (click)="selectedSpaceType.set('Office')">
+          <span class="space-icon">🏢</span>
+          <h3>Office</h3>
+          <p>Low-maintenance air filters for office productivity.</p>
+        </div>
+        <div class="space-box" [class.selected]="selectedSpaceType() === 'Room'" (click)="selectedSpaceType.set('Room')">
+          <span class="space-icon">🛏️</span>
+          <h3>Room</h3>
+          <p>Oxygen boosters for bedrooms and living rooms.</p>
+        </div>
+        <div class="space-box" [class.selected]="selectedSpaceType() === 'Balcony'" (click)="selectedSpaceType.set('Balcony')">
+          <span class="space-icon">🪴</span>
+          <h3>Balcony</h3>
+          <p>Vertical planters, climbers and railing greens.</p>
+        </div>
+        <div class="space-box" [class.selected]="selectedSpaceType() === 'Garden'" (click)="selectedSpaceType.set('Garden')">
+          <span class="space-icon">🌳</span>
+          <h3>Garden</h3>
+          <p>Flowering shrubs, landscaping audits, and soil care.</p>
+        </div>
+      </div>
+
+      <div class="wizard-actions">
+        <button class="btn btn-primary" (click)="goToStep(2)" [disabled]="!selectedSpaceType()">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Condition Questionnaire -->
+    <div *ngIf="step() === 2" class="step-pane animate-fade-in">
+      <h2>Tell us about the environment</h2>
+      <p class="pane-subtitle">We select plants that will survive your specific conditions.</p>
+
+      <div class="form-container">
+        <div class="form-group">
+          <label class="form-label">Approximate Area Dimensions (e.g. 5x10 ft)</label>
+          <input type="text" [(ngModel)]="dimensions" placeholder="e.g. 10x12 feet" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Natural Light Availability</label>
+          <select [(ngModel)]="lightLevel" class="form-input">
+            <option value="Low">Low Light (artificial light or deep shade)</option>
+            <option value="Medium">Medium Bright (indirect light, shaded windows)</option>
+            <option value="Bright Indirect">Bright Indirect (near sunny windows, no direct rays)</option>
+            <option value="Direct Sun">Direct Sun (open balconies, gardens)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Do you have pets at home?</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="pets" [value]="true" [(ngModel)]="hasPets">
+              Yes, show pet-safe plants
+            </label>
+            <label>
+              <input type="radio" name="pets" [value]="false" [(ngModel)]="hasPets">
+              No, show any plants
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Budget Range</label>
+          <select [(ngModel)]="budget" class="form-input">
+            <option value="Economy">Economy (Under ₹2,000)</option>
+            <option value="Standard">Standard (₹2,000 - ₹5,000)</option>
+            <option value="Premium">Premium (Above ₹5,000)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="wizard-actions">
+        <button class="btn btn-secondary" (click)="goToStep(1)">Back</button>
+        <button class="btn btn-primary" (click)="loadMatchingPackages()">Get Recommendations</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Recommendation Results -->
+    <div *ngIf="step() === 3" class="step-pane animate-fade-in">
+      <h2>Your Custom Recommendations</h2>
+      <p class="pane-subtitle">Here are the packages designed specifically for a {{ selectedSpaceType() }} under {{ lightLevel }} light.</p>
+
+      <div class="packages-grid" *ngIf="matchingPackages().length > 0; else noPackages">
+        <div *ngFor="let pack of matchingPackages()" class="package-item card">
+          <img [src]="pack.imageUrl || 'assets/images/placeholder.jpg'" [alt]="pack.packageName" class="package-img">
+          <div class="package-details">
+            <span class="badge badge-green">{{ pack.spaceType }} Package</span>
+            <h3>{{ pack.packageName }}</h3>
+            <p class="dimensions-tag">📏 Best for: {{ pack.targetDimensions }}</p>
+            <p>{{ pack.description }}</p>
+            
+            <div class="package-footer">
+              <span class="price">₹{{ pack.basePrice }}</span>
+              <div class="action-buttons">
+                <button (click)="buyPackage(pack)" class="btn btn-primary btn-sm">Buy Package</button>
+                <button (click)="openBookingModal()" class="btn btn-secondary btn-sm">Book Consultation</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noPackages>
+        <div class="no-packages card text-center">
+          <h3>We want to design this custom for you!</h3>
+          <p>We don't have a standard pre-curated pack matching your exact light and size combo. Book a personalized landscaping consultation and our horticulturist will call you.</p>
+          <button (click)="openBookingModal()" class="btn btn-primary">Book Consultation Audit</button>
+        </div>
+      </ng-template>
+
+      <div class="wizard-actions">
+        <button class="btn btn-secondary" (click)="goToStep(2)">Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Consultation Booking Modal -->
+  <div class="modal-overlay" *ngIf="showBookingForm()" (click)="closeBookingModal()">
+    <div class="booking-modal card" (click)="$event.stopPropagation()">
+      <button class="close-modal-btn" (click)="closeBookingModal()">✕</button>
+      
+      <h2>Book Landscaping Audit</h2>
+      <p>Provide contact details and our certified garden designer will arrange a site audit (virtual or offline).</p>
+      
+      <form (submit)="submitBooking()" class="booking-form">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" [(ngModel)]="bookingName" name="name" required class="form-input">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" [(ngModel)]="bookingEmail" name="email" required class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" [(ngModel)]="bookingPhone" name="phone" required class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Audit Date</label>
+          <input type="date" [(ngModel)]="bookingDate" name="date" required class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Custom Requirements / Notes</label>
+          <textarea [(ngModel)]="bookingNotes" name="notes" placeholder="Tell us if you want vertical garden walls, specific color themes, or timing preferences..." class="form-input" rows="3"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeBookingModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="bookingInProgress()">
+            {{ bookingInProgress() ? 'Registering Booking...' : 'Request Consultation' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
